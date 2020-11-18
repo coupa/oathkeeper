@@ -370,6 +370,7 @@ func (r *RegistryMemory) prepareAuthz() {
 			authz.NewAuthorizerAllow(r.c),
 			authz.NewAuthorizerDeny(r.c),
 			authz.NewAuthorizerKetoEngineACPORY(r.c),
+			authz.NewAuthorizerWarden(r.c),
 			authz.NewAuthorizerRemote(r.c),
 			authz.NewAuthorizerRemoteJSON(r.c),
 		}

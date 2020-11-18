@@ -64,6 +64,8 @@ const (
 
 	ViperKeyAuthorizerKetoEngineACPORYIsEnabled = "authorizers.keto_engine_acp_ory.enabled"
 
+	ViperKeyAuthorizerWardenIsEnabled = "authorizers.warden.enabled"
+
 	ViperKeyAuthorizerRemoteIsEnabled = "authorizers.remote.enabled"
 
 	ViperKeyAuthorizerRemoteJSONIsEnabled = "authorizers.remote_json.enabled"
