@@ -8,25 +8,19 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"sync"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
 	"github.com/urfave/negroni"
 
-	"github.com/ory/analytics-go/v4"
 	"github.com/ory/graceful"
 	"github.com/ory/viper"
 
 	"github.com/ory/x/corsx"
-	"github.com/ory/x/healthx"
 	"github.com/ory/x/logrusx"
-	telemetry "github.com/ory/x/metricsx"
-	"github.com/ory/x/reqlog"
 	"github.com/ory/x/tlsx"
 
-	"github.com/ory/oathkeeper/api"
 	"github.com/ory/oathkeeper/driver"
 	"github.com/ory/oathkeeper/driver/configuration"
 	"github.com/ory/oathkeeper/metrics"
@@ -42,10 +36,11 @@ func runProxy(d driver.Driver, n *negroni.Negroni, logger *logrusx.Logger, prom 
 			Transport: proxy,
 		}
 
-		promCollapsePaths := d.Configuration().PrometheusCollapseRequestPaths()
+		//Disable prometheus since we use statsd
+		// promCollapsePaths := d.Configuration().PrometheusCollapseRequestPaths()
 
-		n.Use(metrics.NewMiddleware(prom, "oathkeeper-proxy").ExcludePaths(healthx.ReadyCheckPath, healthx.AliveCheckPath).CollapsePaths(promCollapsePaths))
-		n.Use(reqlog.NewMiddlewareFromLogger(logger, "oathkeeper-proxy").ExcludePaths(healthx.ReadyCheckPath, healthx.AliveCheckPath))
+		// n.Use(metrics.NewMiddleware(prom, "oathkeeper-proxy").ExcludePaths(healthx.ReadyCheckPath, healthx.AliveCheckPath).CollapsePaths(promCollapsePaths))
+		// n.Use(reqlog.NewMiddlewareFromLogger(logger, "oathkeeper-proxy").ExcludePaths(healthx.ReadyCheckPath, healthx.AliveCheckPath))
 		n.UseHandler(handler)
 
 		h := corsx.Initialize(n, logger, "serve.proxy")
@@ -83,10 +78,11 @@ func runAPI(d driver.Driver, n *negroni.Negroni, logger *logrusx.Logger, prom *m
 		d.Registry().HealthHandler().SetRoutes(router.Router, true)
 		d.Registry().CredentialHandler().SetRoutes(router)
 
-		promCollapsePaths := d.Configuration().PrometheusCollapseRequestPaths()
+		//Disable prometheus since we use statsd
+		// promCollapsePaths := d.Configuration().PrometheusCollapseRequestPaths()
 
-		n.Use(metrics.NewMiddleware(prom, "oathkeeper-api").ExcludePaths(healthx.ReadyCheckPath, healthx.AliveCheckPath).CollapsePaths(promCollapsePaths))
-		n.Use(reqlog.NewMiddlewareFromLogger(logger, "oathkeeper-api").ExcludePaths(healthx.ReadyCheckPath, healthx.AliveCheckPath))
+		// n.Use(metrics.NewMiddleware(prom, "oathkeeper-api").ExcludePaths(healthx.ReadyCheckPath, healthx.AliveCheckPath).CollapsePaths(promCollapsePaths))
+		// n.Use(reqlog.NewMiddlewareFromLogger(logger, "oathkeeper-api").ExcludePaths(healthx.ReadyCheckPath, healthx.AliveCheckPath))
 		n.Use(d.Registry().DecisionHandler()) // This needs to be the last entry, otherwise the judge API won't work
 
 		n.UseHandler(router)
@@ -191,49 +187,50 @@ func RunServe(version, build, date string) func(cmd *cobra.Command, args []strin
 		adminmw := negroni.New()
 		publicmw := negroni.New()
 
-		telemetry := telemetry.New(cmd, logger,
-			&telemetry.Options{
-				Service:       "ory-oathkeeper",
-				ClusterID:     telemetry.Hash(clusterID(d.Configuration())),
-				IsDevelopment: isDevelopment(d.Configuration()),
-				WriteKey:      "xRVRP48SAKw6ViJEnvB0u2PY8bVlsO6O",
-				WhitelistedPaths: []string{
-					"/",
-					api.CredentialsPath,
-					api.DecisionPath,
-					api.RulesPath,
-					healthx.VersionPath,
-					healthx.AliveCheckPath,
-					healthx.ReadyCheckPath,
-				},
-				BuildVersion: version,
-				BuildTime:    build,
-				BuildHash:    date,
-				Config: &analytics.Config{
-					Endpoint:             "https://sqa.ory.sh",
-					GzipCompressionLevel: 6,
-					BatchMaxSize:         500 * 1000,
-					BatchSize:            250,
-					Interval:             time.Hour * 24,
-				},
-			},
-		)
+		//Disable prometheus telemetry since we use statsd
+		// telemetry := telemetry.New(cmd, logger,
+		// 	&telemetry.Options{
+		// 		Service:       "ory-oathkeeper",
+		// 		ClusterID:     telemetry.Hash(clusterID(d.Configuration())),
+		// 		IsDevelopment: isDevelopment(d.Configuration()),
+		// 		WriteKey:      "xRVRP48SAKw6ViJEnvB0u2PY8bVlsO6O",
+		// 		WhitelistedPaths: []string{
+		// 			"/",
+		// 			api.CredentialsPath,
+		// 			api.DecisionPath,
+		// 			api.RulesPath,
+		// 			healthx.VersionPath,
+		// 			healthx.AliveCheckPath,
+		// 			healthx.ReadyCheckPath,
+		// 		},
+		// 		BuildVersion: version,
+		// 		BuildTime:    build,
+		// 		BuildHash:    date,
+		// 		Config: &analytics.Config{
+		// 			Endpoint:             "https://sqa.ory.sh",
+		// 			GzipCompressionLevel: 6,
+		// 			BatchMaxSize:         500 * 1000,
+		// 			BatchSize:            250,
+		// 			Interval:             time.Hour * 24,
+		// 		},
+		// 	},
+		// )
 
-		adminmw.Use(telemetry)
-		publicmw.Use(telemetry)
+		// adminmw.Use(telemetry)
+		// publicmw.Use(telemetry)
 
 		if tracer := d.Registry().Tracer(); tracer.IsLoaded() {
 			adminmw.Use(tracer)
 			publicmw.Use(tracer)
 		}
 
-		prometheusRepo := metrics.NewPrometheusRepository(logger)
+		// prometheusRepo := metrics.NewPrometheusRepository(logger)
 
 		var wg sync.WaitGroup
 		tasks := []func(){
-			runAPI(d, adminmw, logger, prometheusRepo),
-			runProxy(d, publicmw, logger, prometheusRepo),
-			runPrometheus(d, logger, prometheusRepo),
+			runAPI(d, adminmw, logger, nil),
+			runProxy(d, publicmw, logger, nil),
+			//runPrometheus(d, logger, prometheusRepo),
 		}
 		wg.Add(len(tasks))
 		for _, t := range tasks {

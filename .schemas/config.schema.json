@@ -742,6 +742,37 @@
       ],
       "additionalProperties": false
     },
+    "configAuthorizersWarden": {
+      "type": "object",
+      "title": "ORY Hydra Warden Authorizer Configuration",
+      "description": "This section is optional when the authorizer is disabled.",
+      "properties": {
+        "base_url": {
+          "title": "Base URL",
+          "type": "string",
+          "format": "uri",
+          "description": "The base URL of ORY Hydra.\n\n>If this authorizer is enabled, this value is required.",
+          "examples": [
+            "http://my-hydra/"
+          ]
+        },
+        "required_action": {
+          "type": "string"
+        },
+        "required_resource": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "base_url",
+        "required_action",
+        "required_resource"
+      ],
+      "additionalProperties": false
+    },
     "configAuthorizersRemoteJSON": {
       "type": "object",
       "title": "Remote JSON Configuration",
@@ -1422,6 +1453,38 @@
                 },
                 "config": {
                   "$ref": "#/definitions/configAuthorizersKetoEngineAcpOry"
+                }
+              },
+              "required": [
+                "config"
+              ]
+            },
+            {
+              "properties": {
+                "enabled": {
+                  "const": false
+                }
+              }
+            }
+          ]
+        },
+        "warden": {
+          "title": "ORY Hydra Warden",
+          "description": "The [`warden` authorizer](https://www.ory.sh/docs/oathkeeper/pipeline/authz#warden).",
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "$ref": "#/definitions/handlerSwitch"
+            }
+          },
+          "oneOf": [
+            {
+              "properties": {
+                "enabled": {
+                  "const": true
+                },
+                "config": {
+                  "$ref": "#/definitions/configAuthorizersWarden"
                 }
               },
               "required": [

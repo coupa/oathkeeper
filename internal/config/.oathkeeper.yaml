@@ -253,6 +253,17 @@ authorizers:
       required_action: unknown
       required_resource: unknown
 
+  # Configures the warden authorizer
+  warden:
+    # Set enabled to true if the authorizer should be enabled and false to disable the authorizer. Defaults to false.
+    enabled: true
+
+    config:
+      # REQUIRED IF ENABLED - The base URL of ORY Hydra, typically something like http(s)://<host>[:<port>]/
+      base_url: http://my-hydra/
+      required_action: unknown
+      required_resource: unknown
+
   # Configures the remote authorizer
   remote:
     # Set enabled to true if the authorizer should be enabled and false to disable the authorizer. Defaults to false.
