@@ -11,6 +11,7 @@ require (
 	github.com/aws/aws-sdk-go v1.31.13
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/bxcodec/faker v2.0.1+incompatible
+	github.com/coupa/foundation-go v1.2.2
 	github.com/dgraph-io/ristretto v0.0.2
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dlclark/regexp2 v1.2.0
