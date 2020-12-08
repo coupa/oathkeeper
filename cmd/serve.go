@@ -24,6 +24,7 @@ import (
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/viperx"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/ory/oathkeeper/cmd/server"
@@ -43,6 +44,13 @@ on configuration options, open the configuration documentation:
 >> https://www.ory.sh/oathkeeper/docs/configuration <<
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		if err := x.LoadSecretsToEnv(); err != nil {
+			log.Fatal(err)
+		}
+		if err := x.SetupAppCerts(); err != nil {
+			log.Fatal(err)
+		}
+
 		logger = viperx.InitializeConfig("oathkeeper", "", logger)
 
 		watchAndValidateViper()
