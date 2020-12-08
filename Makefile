@@ -3,6 +3,24 @@ SHELL=/bin/bash -o pipefail
 export GO111MODULE := on
 export PATH := .bin:${PATH}
 
+SRCROOT ?= $(realpath .)
+
+# These are paths used in the docker image
+SRCROOT_D = /go/src/github.com/ory/oathkeeper
+
+BUILD_NUMBER ?= 0
+BUILD_IDENTIFIER = _${BUILD_NUMBER}
+
+MAJOR_VERSION = 1
+MINOR_VERSION = 0
+PATCH_VERSION = $(BUILD_NUMBER)
+
+REVISION ?= $$(git rev-parse --short HEAD)
+VERSION ?= $(MAJOR_VERSION).$(MINOR_VERSION).$(PATCH_VERSION)
+CGO_ENABLED ?= 0
+
+LD_FLAGS ?= -ldflags "-X github.com/ory/oathkeeper/x.Commit=$(REVISION) -X github.com/ory/oathkeeper/x.Version=$(VERSION)"
+
 .PHONY: deps
 deps:
 ifneq ("$(shell base64 Makefile))","$(shell cat .bin/.lock)")
@@ -65,3 +83,29 @@ docker: deps
 		docker build -t oryd/oathkeeper:dev .
 		docker build -t oryd/oathkeeper:dev-alpine -f Dockerfile-alpine .
 		rm oathkeeper
+
+.PHONY: clean
+clean:
+		rm -f oathkeeper
+
+.PHONY: build
+build: clean
+		which packr2; if [ $$? -eq 1 ]; then \
+				go get -u github.com/gobuffalo/packr/v2/packr2; \
+		fi
+		packr2 clean
+		packr2
+	 	GO111MODULE=on CGO_ENABLED=$(CGO_ENABLED) go build $(LD_FLAGS)
+
+.PHONY: docker.build
+docker.build: clean
+		docker build -f Dockerfile-builder \
+			-t oathkeeper$(BUILD_IDENTIFIER) \
+			--build-arg VERSION=$(VERSION) \
+			--build-arg REVISION=$(REVISION) \
+			--build-arg CGO_ENABLED=$(CGO_ENABLED) \
+			--build-arg BUILDER_IMAGE=$(BUILDER_IMAGE) .
+		docker create -it --name tocopy-oathkeeper$(BUILD_IDENTIFIER) oathkeeper$(BUILD_IDENTIFIER) bash
+		docker cp tocopy-oathkeeper$(BUILD_IDENTIFIER):$(SRCROOT_D)/oathkeeper $(SRCROOT)/
+		docker rm -f tocopy-oathkeeper$(BUILD_IDENTIFIER)
+		docker rmi -f oathkeeper$(BUILD_IDENTIFIER)
