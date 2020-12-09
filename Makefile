@@ -13,7 +13,7 @@ BUILD_IDENTIFIER = _${BUILD_NUMBER}
 
 MAJOR_VERSION = 1
 MINOR_VERSION = 0
-PATCH_VERSION = $(BUILD_NUMBER)
+PATCH_VERSION = 0
 
 REVISION ?= $$(git rev-parse --short HEAD)
 VERSION ?= $(MAJOR_VERSION).$(MINOR_VERSION).$(PATCH_VERSION)
@@ -86,7 +86,7 @@ docker: deps
 
 .PHONY: clean
 clean:
-		rm -f oathkeeper
+		rm -f oathkeeper oathkeeper_version.txt
 
 .PHONY: build
 build: clean
@@ -100,12 +100,16 @@ build: clean
 .PHONY: docker.build
 docker.build: clean
 		docker build -f Dockerfile-builder \
-			-t oathkeeper$(BUILD_IDENTIFIER) \
-			--build-arg VERSION=$(VERSION) \
-			--build-arg REVISION=$(REVISION) \
-			--build-arg CGO_ENABLED=$(CGO_ENABLED) \
-			--build-arg BUILDER_IMAGE=$(BUILDER_IMAGE) .
+				-t oathkeeper$(BUILD_IDENTIFIER) \
+				--build-arg VERSION=$(VERSION) \
+				--build-arg REVISION=$(REVISION) \
+				--build-arg CGO_ENABLED=$(CGO_ENABLED) \
+				--build-arg BUILDER_IMAGE=$(BUILDER_IMAGE) .
 		docker create -it --name tocopy-oathkeeper$(BUILD_IDENTIFIER) oathkeeper$(BUILD_IDENTIFIER) bash
 		docker cp tocopy-oathkeeper$(BUILD_IDENTIFIER):$(SRCROOT_D)/oathkeeper $(SRCROOT)/
 		docker rm -f tocopy-oathkeeper$(BUILD_IDENTIFIER)
 		docker rmi -f oathkeeper$(BUILD_IDENTIFIER)
+
+.PHONY: version
+version:
+		echo $(VERSION)-$(REVISION) > oathkeeper_version.txt
