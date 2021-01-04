@@ -44,11 +44,14 @@ on configuration options, open the configuration documentation:
 >> https://www.ory.sh/oathkeeper/docs/configuration <<
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := x.LoadSecretsToEnv(); err != nil {
+		data, err := x.GetMainSecrets()
+		if err != nil {
 			log.Fatal(err)
 		}
-		if err := x.SetupAppCerts(); err != nil {
-			log.Fatal(err)
+		if data != nil {
+			if err := x.SetupAppCerts(data[x.AppCertSecretEnvName]); err != nil {
+				log.Fatal(err)
+			}
 		}
 
 		logger = viperx.InitializeConfig("oathkeeper", "", logger)
