@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	appCertSecretEnvName = "AWS_APP_CERTS_SECRET_NAME"
+	AppCertSecretEnvName = "AWS_APP_CERTS_SECRET_NAME"
 	appSSLCert           = "app_ssl_certificate"
 	appSSLKey            = "app_ssl_certificate_key"
 
@@ -22,24 +22,24 @@ const (
 	apiKeyEnvName        = "SERVE_API_TLS_KEY_BASE64"
 )
 
-func LoadSecretsToEnv() error {
+func GetMainSecrets() (map[string]string, error) {
 	smName := os.Getenv(SecretManagerEnvName)
 	if smName == "" {
-		return nil
+		return nil, nil
 	}
 	if os.Getenv(AWSRegionEnvName) == "" {
 		//Default region to us-east-1
 		if err := os.Setenv(AWSRegionEnvName, "us-east-1"); err != nil {
-			return err
+			return nil, err
 		}
 	}
-	return conf.WriteSecretsToENV(smName)
+	data, _, err := conf.GetSecrets(smName)
+	return data, err
 }
 
 //SetupAppCerts gets a cert and a key from secrets manager. It extracts the base64
 //portion in the cert and the key and sets them to the corresponding env variables.
-func SetupAppCerts() error {
-	appcertsSecretName := os.Getenv(appCertSecretEnvName)
+func SetupAppCerts(appcertsSecretName string) error {
 	if appcertsSecretName == "" {
 		return nil
 	}
