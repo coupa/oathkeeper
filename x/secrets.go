@@ -1,6 +1,7 @@
 package x
 
 import (
+	"encoding/base64"
 	"fmt"
 	"os"
 	"strings"
@@ -53,7 +54,7 @@ func SetupAppCerts(appcertsSecretName string) error {
 		if pem == "" {
 			return fmt.Errorf("App certificate (%s) on Secrets Manager (%s) not found", appSSLCert, appcertsSecretName)
 		}
-		cert := extractCertBase64(pem)
+		cert := processAndEncode(pem)
 		if err = os.Setenv(proxyCertEnvName, cert); err != nil {
 			return fmt.Errorf("Error setting %s with cert from secrets manager: %v", proxyCertEnvName, err)
 		}
@@ -67,7 +68,7 @@ func SetupAppCerts(appcertsSecretName string) error {
 		if key == "" {
 			return fmt.Errorf("App key (%s) on Secrets Manager (%s) not found", appSSLKey, appcertsSecretName)
 		}
-		privKey := extractKeyBase64(key)
+		privKey := processAndEncode(key)
 		if err = os.Setenv(proxyKeyEnvName, privKey); err != nil {
 			return fmt.Errorf("Error setting %s with TLS key from secrets manager: %v", proxyKeyEnvName, err)
 		}
@@ -79,14 +80,7 @@ func SetupAppCerts(appcertsSecretName string) error {
 	return nil
 }
 
-func extractCertBase64(pem string) string {
-	pem = strings.TrimPrefix(pem, "-----BEGIN CERTIFICATE-----\\n")
-	pem = strings.TrimSuffix(pem, "-----END CERTIFICATE-----\\n")
-	return strings.ReplaceAll(pem, "\\n", "")
-}
-
-func extractKeyBase64(pem string) string {
-	pem = strings.TrimPrefix(pem, "-----BEGIN RSA PRIVATE KEY-----\\n")
-	pem = strings.TrimSuffix(pem, "-----END RSA PRIVATE KEY-----\\n")
-	return strings.ReplaceAll(pem, "\\n", "")
+func processAndEncode(pem string) string {
+	processed := strings.ReplaceAll(pem, "\\n", "\n")
+	return base64.StdEncoding.EncodeToString([]byte(processed))
 }
