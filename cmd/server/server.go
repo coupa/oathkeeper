@@ -18,6 +18,7 @@ import (
 	"github.com/ory/viper"
 
 	"github.com/ory/x/corsx"
+	"github.com/ory/x/healthx"
 	"github.com/ory/x/logrusx"
 	"github.com/ory/x/reqlog"
 	"github.com/ory/x/tlsx"
