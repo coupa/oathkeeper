@@ -19,6 +19,7 @@ import (
 
 	"github.com/ory/x/corsx"
 	"github.com/ory/x/logrusx"
+	"github.com/ory/x/reqlog"
 	"github.com/ory/x/tlsx"
 
 	"github.com/ory/oathkeeper/driver"
@@ -40,7 +41,7 @@ func runProxy(d driver.Driver, n *negroni.Negroni, logger *logrusx.Logger, prom 
 		// promCollapsePaths := d.Configuration().PrometheusCollapseRequestPaths()
 
 		// n.Use(metrics.NewMiddleware(prom, "oathkeeper-proxy").ExcludePaths(healthx.ReadyCheckPath, healthx.AliveCheckPath).CollapsePaths(promCollapsePaths))
-		// n.Use(reqlog.NewMiddlewareFromLogger(logger, "oathkeeper-proxy").ExcludePaths(healthx.ReadyCheckPath, healthx.AliveCheckPath))
+		n.Use(reqlog.NewMiddlewareFromLogger(logger, "oathkeeper-proxy").ExcludePaths(healthx.ReadyCheckPath, healthx.AliveCheckPath, "/health"))
 		n.UseHandler(handler)
 
 		h := corsx.Initialize(n, logger, "serve.proxy")
@@ -82,7 +83,7 @@ func runAPI(d driver.Driver, n *negroni.Negroni, logger *logrusx.Logger, prom *m
 		// promCollapsePaths := d.Configuration().PrometheusCollapseRequestPaths()
 
 		// n.Use(metrics.NewMiddleware(prom, "oathkeeper-api").ExcludePaths(healthx.ReadyCheckPath, healthx.AliveCheckPath).CollapsePaths(promCollapsePaths))
-		// n.Use(reqlog.NewMiddlewareFromLogger(logger, "oathkeeper-api").ExcludePaths(healthx.ReadyCheckPath, healthx.AliveCheckPath))
+		n.Use(reqlog.NewMiddlewareFromLogger(logger, "oathkeeper-api").ExcludePaths(healthx.ReadyCheckPath, healthx.AliveCheckPath))
 		n.Use(d.Registry().DecisionHandler()) // This needs to be the last entry, otherwise the judge API won't work
 
 		n.UseHandler(router)

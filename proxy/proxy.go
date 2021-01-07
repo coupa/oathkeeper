@@ -97,10 +97,12 @@ func (d *Proxy) RoundTrip(r *http.Request) (*http.Response, error) {
 				Warn("Access request denied because roundtrip failed")
 			// don't need to return because covered in next line
 		} else {
-			d.r.Logger().
-				WithField("granted", true).
-				WithFields(fields).
-				Warn("Access request granted")
+			if r.URL.Path != "/health" {
+				d.r.Logger().
+					WithField("granted", true).
+					WithFields(fields).
+					Warn("Access request granted")
+			}
 		}
 
 		return res, err
